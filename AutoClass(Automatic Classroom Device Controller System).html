@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoClass — Automatic Classroom Device Controller System</title>
+<meta name="description" content="Automatic Classroom Device Controller System — smart occupancy sensing, appliance automation, camera monitoring, and activity logs.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='64' y2='64' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23123363'/%3E%3Cstop offset='1' stop-color='%23081B36'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Cpath d='M22.5 30.4 A 14 14 0 0 0 41.5 30.4' fill='none' stroke='%234DA3FF' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M16.6 37 A 23 23 0 0 0 47.4 37' fill='none' stroke='%232E7CF6' stroke-width='4' stroke-linecap='round' opacity='.75'/%3E%3Ccircle cx='32' cy='20' r='6' fill='%234DA3FF'/%3E%3Cpath d='M16 52 H48' stroke='%23FFFFFF' stroke-width='2.5' stroke-linecap='round' opacity='.18'/%3E%3Ccircle cx='32' cy='52' r='2.8' fill='%239CCBFF'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   AutoClass — Automatic Classroom Device Controller System
+   Palette: navy blue · white · soft gray · light blue
+   Style:   minimalist, soft glassmorphism, rounded corners
+   ============================================================ */
+
+:root{
+  /* Color tokens */
+  --navy-900:#081B36;
+  --navy-800:#0A2240;
+  --navy-700:#123363;
+  --blue-600:#2E7CF6;
+  --blue-500:#4DA3FF;
+  --blue-300:#9CCBFF;
+  --blue-100:#DCEBFF;
+  --ice:#EEF4FC;
+  --bg:#F4F7FB;
+  --line:#DCE4F0;
+  --ink:#13233F;
+  --ink-soft:#4D5F80;
+  --muted:#8A97AC;
+  --green:#1FA463;
+  --amber:#E8A13C;
+  --red:#E25555;
+
+  /* Shape & depth */
+  --radius-lg:24px;
+  --radius:16px;
+  --radius-sm:12px;
+  --shadow:0 10px 30px -10px rgba(10,34,64,.14), 0 2px 8px rgba(10,34,64,.05);
+  --shadow-soft:0 6px 18px -8px rgba(10,34,64,.10);
+
+  /* Glass */
+  --glass:rgba(255,255,255,.62);
+  --glass-border:rgba(255,255,255,.8);
+
+  /* Type */
+  --font-display:'Sora','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-body:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:ui-monospace,'SF Mono','Cascadia Code',Consolas,monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+img,svg,canvas{display:block;max-width:100%}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select{font-family:inherit;font-size:1rem;color:var(--ink)}
+a{color:inherit;text-decoration:none}
+
+:focus-visible{outline:3px solid rgba(77,163,255,.55);outline-offset:2px;border-radius:6px}
+
+h1,h2,h3{font-family:var(--font-display);line-height:1.2;color:var(--navy-800)}
+
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+
+/* ---------- Page background tint ---------- */
+.bg-tint{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(640px 420px at 12% -6%, rgba(77,163,255,.14), transparent 60%),
+    radial-gradient(560px 400px at 96% 16%, rgba(124,196,255,.12), transparent 60%),
+    var(--bg);
+}
+
+/* ============================================================
+   Navigation (glass bar)
+   ============================================================ */
+.nav{
+  position:fixed;top:14px;left:0;right:0;z-index:60;
+}
+.nav-inner{
+  max-width:1160px;margin:0 auto;padding:10px 14px 10px 18px;
+  display:flex;align-items:center;gap:18px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-radius:18px;box-shadow:var(--shadow-soft);
+}
+@media(max-width:1208px){.nav{padding:0 24px}}
+
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:1.06rem;color:var(--navy-800)}
+.brand-mark{
+  width:34px;height:34px;border-radius:10px;flex:none;
+  background:linear-gradient(150deg,var(--navy-700),var(--navy-900));
+  display:grid;place-items:center;color:#fff;
+  box-shadow:0 4px 12px rgba(46,124,246,.35);
+}
+.brand-mark svg{width:22px;height:22px}
+.brand small{display:block;font-family:var(--font-body);font-weight:500;font-size:.62rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;line-height:1}
+
+.nav-menu{display:flex;align-items:center;gap:10px;margin-left:auto}
+.nav-links{display:flex;gap:4px;list-style:none}
+.nav-links button{
+  padding:8px 14px;border-radius:10px;font-size:.92rem;font-weight:500;color:var(--ink-soft);
+  transition:background .18s,color .18s;
+}
+.nav-links button:hover{background:rgba(77,163,255,.12);color:var(--navy-800)}
+.nav-links button.active{background:var(--navy-800);color:#fff}
+
+.nav-auth{display:flex;gap:8px;align-items:center;margin-left:8px}
+.user-chip{
+  display:none;align-items:center;gap:10px;padding:5px 12px 5px 6px;
+  background:rgba(255,255,255,.7);border:1px solid var(--line);border-radius:999px;
+}
+.user-chip.show{display:flex}
+.avatar{
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--blue-500),var(--blue-600));
+  color:#fff;font-size:.78rem;font-weight:600;
+}
+.user-chip span{font-size:.88rem;font-weight:500;color:var(--navy-800)}
+
+.burger{display:none;margin-left:auto;width:40px;height:40px;border-radius:10px;color:var(--navy-800)}
+.burger:hover{background:rgba(77,163,255,.12)}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 22px;border-radius:12px;font-size:.95rem;font-weight:600;
+  transition:transform .16s,box-shadow .16s,background .16s;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--blue-600),var(--navy-700));
+  color:#fff;box-shadow:0 8px 20px -6px rgba(46,124,246,.5);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 26px -6px rgba(46,124,246,.55)}
+.btn-ghost{
+  background:rgba(255,255,255,.7);color:var(--navy-800);
+  border:1px solid var(--line);
+}
+.btn-ghost:hover{background:#fff;border-color:var(--blue-300)}
+.btn-light{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.32);backdrop-filter:blur(6px)}
+.btn-light:hover{background:rgba(255,255,255,.24)}
+.btn-sm{padding:8px 14px;font-size:.86rem;border-radius:10px}
+.btn-danger{background:rgba(226,85,85,.1);color:var(--red);border:1px solid rgba(226,85,85,.3)}
+.btn-danger:hover{background:rgba(226,85,85,.16)}
+
+/* ============================================================
+   Views (single-page routing)
+   ============================================================ */
+main{padding-top:96px;min-height:100vh}
+.view{display:none}
+.view.active{display:block;animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.page-head{margin:18px 0 26px}
+.page-head h2{font-size:1.7rem}
+.page-head p{color:var(--ink-soft);font-size:.97rem;margin-top:4px}
+
+/* ============================================================
+   HERO — futuristic classroom
+   ============================================================ */
+.hero{
+  position:relative;overflow:hidden;
+  margin-top:10px;
+  border-radius:var(--radius-lg);
+  background:
+    radial-gradient(720px 420px at 85% 10%, rgba(77,163,255,.28), transparent 62%),
+    radial-gradient(560px 380px at 8% 92%, rgba(46,124,246,.22), transparent 60%),
+    linear-gradient(150deg,var(--navy-900) 0%,var(--navy-800) 52%,var(--navy-700) 100%);
+  box-shadow:0 24px 60px -18px rgba(8,27,54,.55);
+}
+.hero::before{ /* tech grid */
+  content:"";position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(124,196,255,.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(124,196,255,.07) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(80% 80% at 60% 40%,#000 30%,transparent 100%);
+}
+.hero-grid{
+  position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:36px;
+  padding:64px 56px;align-items:center;
+}
+.hero-copy{color:#fff}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.74rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--blue-300);
+  padding:6px 12px;border-radius:999px;
+  background:rgba(124,196,255,.12);border:1px solid rgba(124,196,255,.28);
+}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--blue-500);box-shadow:0 0 10px var(--blue-500);animation:blink 2.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+.hero h1{
+  color:#fff;font-size:clamp(2rem,4.4vw,3.15rem);font-weight:800;
+  letter-spacing:-.02em;margin:20px 0 16px;
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(90deg,var(--blue-500),var(--blue-300) 60%,#fff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p.lead{color:rgba(225,237,252,.82);font-size:1.05rem;max-width:46ch}
+.hero-cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+
+.hero-stats{display:flex;gap:26px;margin-top:34px;flex-wrap:wrap}
+.hstat{border-left:2px solid rgba(124,196,255,.4);padding-left:14px}
+.hstat b{display:block;font-family:var(--font-display);font-size:1.25rem;color:#fff}
+.hstat span{font-size:.8rem;color:rgba(196,219,245,.75)}
+
+/* --- Illustrated classroom panel --- */
+.hero-fig{position:relative}
+.room{
+  position:relative;border-radius:20px;overflow:hidden;
+  border:1px solid rgba(124,196,255,.22);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+  box-shadow:inset 0 0 60px rgba(46,124,246,.12);
+}
+.room svg{width:100%;height:auto}
+.ring{transform-box:fill-box;transform-origin:center;animation:ping 2.6s ease-out infinite}
+.ring.r2{animation-delay:1.3s}
+@keyframes ping{0%{transform:scale(.35);opacity:.9}80%{opacity:0}100%{transform:scale(1);opacity:0}}
+.spark{animation:drift 7s ease-in-out infinite alternate}
+.spark.s2{animation-delay:2.2s}.spark.s3{animation-delay:4s}
+@keyframes drift{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+
+.chip{
+  position:absolute;display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:14px;
+  background:rgba(13,36,70,.55);
+  border:1px solid rgba(160,205,250,.35);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 10px 26px -8px rgba(4,14,30,.6);
+  color:#fff;animation:floaty 6s ease-in-out infinite;
+}
+.chip small{display:block;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-300);line-height:1.1}
+.chip b{font-family:var(--font-mono);font-weight:600;font-size:.95rem}
+.chip .cdot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+.chip.c1{top:8%;left:-4%}
+.chip.c2{top:42%;right:-5%;animation-delay:1.6s}
+.chip.c3{bottom:7%;left:8%;animation-delay:3.1s}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+
+/* ============================================================
+   HOME — how it works & features
+   ============================================================ */
+.section{padding:74px 0 10px}
+.sec-head{max-width:640px;margin-bottom:36px}
+.sec-head .kicker{font-size:.74rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue-600)}
+.sec-head h2{font-size:1.85rem;margin-top:8px}
+.sec-head p{color:var(--ink-soft);margin-top:8px}
+
+.flow-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.flow-step{
+  position:relative;padding:22px 20px;border-radius:var(--radius);
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(12px);box-shadow:var(--shadow-soft);
+}
+.flow-step .num{
+  font-family:var(--font-display);font-weight:700;font-size:.8rem;color:var(--blue-600);
+  background:var(--blue-100);border-radius:8px;padding:3px 9px;display:inline-block;
+}
+.flow-step h3{font-size:1.03rem;margin:12px 0 6px}
+.flow-step p{font-size:.88rem;color:var(--ink-soft)}
+.flow-step::after{
+  content:"";position:absolute;top:50%;right:-14px;width:12px;height:2px;background:var(--blue-300);
+}
+.flow-step:last-child::after{display:none}
+
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.feature{
+  padding:26px 22px;border-radius:var(--radius);text-align:left;
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(12px);box-shadow:var(--shadow-soft);
+  transition:transform .2s,box-shadow .2s;
+}
+.feature:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.f-icon{
+  width:46px;height:46px;border-radius:13px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(135deg,var(--blue-500),var(--navy-700));
+  box-shadow:0 8px 18px -6px rgba(46,124,246,.5);
+}
+.f-icon svg{width:23px;height:23px}
+.feature h3{font-size:1.05rem;margin:16px 0 6px}
+.feature p{font-size:.9rem;color:var(--ink-soft)}
+.feature .go{margin-top:14px;font-size:.86rem;font-weight:600;color:var(--blue-600);display:inline-flex;align-items:center;gap:6px}
+
+.cta-band{
+  margin:80px 0 56px;padding:46px 48px;border-radius:var(--radius-lg);
+  display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
+  background:linear-gradient(135deg,var(--navy-800),var(--navy-700) 60%,var(--blue-600));
+  color:#fff;box-shadow:0 20px 50px -16px rgba(10,34,64,.5);
+}
+.cta-band h2{color:#fff;font-size:1.55rem}
+.cta-band p{color:rgba(220,235,252,.8);margin-top:6px;font-size:.95rem}
+/* ============================================================
+   AUTH — sign up (flow 1.0) & sign in
+   ============================================================ */
+.auth-wrap{display:grid;place-items:center;padding:30px 0 70px}
+.auth-card{
+  width:min(460px,100%);padding:36px 34px;border-radius:var(--radius-lg);
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:var(--shadow);
+}
+.auth-card h2{font-size:1.5rem}
+.auth-card .sub{color:var(--ink-soft);font-size:.92rem;margin:6px 0 22px}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:.8rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px;letter-spacing:.02em}
+.field input,.field select{
+  width:100%;padding:12px 14px;border-radius:var(--radius-sm);
+  border:1px solid var(--line);background:rgba(255,255,255,.85);
+  transition:border-color .16s,box-shadow .16s;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue-500);box-shadow:0 0 0 4px rgba(77,163,255,.18)}
+.field input.invalid{border-color:var(--red);box-shadow:0 0 0 4px rgba(226,85,85,.12)}
+.field .err{display:none;font-size:.78rem;color:var(--red);margin-top:5px}
+.field .err.show{display:block}
+.field .hint{font-size:.76rem;color:var(--muted);margin-top:5px}
+
+.banner{
+  display:none;align-items:flex-start;gap:10px;
+  padding:12px 14px;border-radius:var(--radius-sm);font-size:.86rem;margin-bottom:18px;
+}
+.banner.show{display:flex}
+.banner.error{background:rgba(226,85,85,.1);border:1px solid rgba(226,85,85,.3);color:#B23B3B}
+.banner.ok{background:rgba(31,164,99,.1);border:1px solid rgba(31,164,99,.3);color:#157A4A}
+
+.auth-foot{margin-top:18px;font-size:.88rem;color:var(--ink-soft);text-align:center}
+.auth-foot button{color:var(--blue-600);font-weight:600;font-size:.88rem}
+.auth-foot button:hover{text-decoration:underline}
+.demo-tip{
+  margin-top:16px;padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--blue-100);border:1px dashed var(--blue-300);
+  font-size:.8rem;color:var(--navy-700);font-family:var(--font-mono);
+}
+
+/* ============================================================
+   DASHBOARD — flow 1.1
+   ============================================================ */
+.dash-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.dash-top h2{font-size:1.6rem}
+.dash-top .sub{color:var(--ink-soft);font-size:.9rem;margin-top:2px}
+.dash-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:999px;font-size:.83rem;font-weight:600;
+}
+.pill .pdot{width:9px;height:9px;border-radius:50%}
+.pill.on{background:rgba(31,164,99,.12);color:#157A4A;border:1px solid rgba(31,164,99,.3)}
+.pill.on .pdot{background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite}
+.pill.off{background:rgba(138,151,172,.14);color:var(--ink-soft);border:1px solid var(--line)}
+.pill.off .pdot{background:var(--muted)}
+.pill.warn{background:rgba(232,161,60,.13);color:#A8731F;border:1px solid rgba(232,161,60,.35)}
+.pill.warn .pdot{background:var(--amber)}
+
+.switch{position:relative;width:44px;height:25px;flex:none}
+.switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.switch .track{
+  position:absolute;inset:0;border-radius:999px;background:#CBD6E6;transition:background .18s;
+}
+.switch .track::after{
+  content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;
+  background:#fff;box-shadow:0 2px 5px rgba(10,34,64,.25);transition:transform .18s;
+}
+.switch input:checked + .track{background:var(--blue-600)}
+.switch input:checked + .track::after{transform:translateX(19px)}
+.switch input:focus-visible + .track{outline:3px solid rgba(77,163,255,.55);outline-offset:2px}
+.sw-label{display:flex;align-items:center;gap:9px;font-size:.86rem;color:var(--ink-soft);font-weight:500}
+
+.grid-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{
+  padding:22px;border-radius:var(--radius);
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:var(--shadow-soft);
+}
+.card h3{font-size:.98rem;display:flex;align-items:center;gap:9px}
+.card h3 .mini-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--blue-500),var(--navy-700));flex:none}
+.card h3 .mini-ic svg{width:16px;height:16px}
+.sensor-val{font-family:var(--font-mono);font-size:1.9rem;font-weight:600;color:var(--navy-800);margin:14px 0 4px}
+.sensor-val small{font-size:.95rem;color:var(--muted);font-weight:500}
+.sensor-sub{font-size:.82rem;color:var(--ink-soft)}
+.updated{font-size:.76rem;color:var(--muted);margin-top:10px}
+
+.dash-lower{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-top:16px;align-items:start}
+
+/* vacancy countdown */
+.vac{margin:16px 0 4px;display:none}
+.vac.show{display:block}
+.vac-bar{height:9px;border-radius:999px;background:rgba(138,151,172,.2);overflow:hidden}
+.vac-fill{height:100%;width:100%;border-radius:999px;background:linear-gradient(90deg,var(--amber),var(--red));transition:width .9s linear}
+.vac small{font-size:.78rem;color:var(--ink-soft)}
+
+.ap-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:13px 4px;border-bottom:1px solid rgba(220,228,240,.8);
+}
+.ap-row:last-child{border-bottom:none}
+.ap-name{display:flex;align-items:center;gap:11px;font-weight:600;font-size:.93rem;color:var(--navy-800)}
+.ap-name svg{width:19px;height:19px;color:var(--blue-600);flex:none}
+.ap-state{display:flex;align-items:center;gap:12px}
+
+.recent-list{list-style:none;margin-top:6px}
+.recent-list li{
+  display:flex;gap:10px;align-items:flex-start;padding:9px 0;
+  border-bottom:1px solid rgba(220,228,240,.8);font-size:.85rem;
+}
+.recent-list li:last-child{border-bottom:none}
+.recent-list .t{font-family:var(--font-mono);color:var(--muted);font-size:.74rem;white-space:nowrap;padding-top:2px}
+.recent-list .empty{color:var(--muted);border:none}
+.card .card-link{margin-top:12px;display:inline-flex;font-size:.85rem;font-weight:600;color:var(--blue-600)}
+
+/* ============================================================
+   CAMERA — flow 1.2
+   ============================================================ */
+.cam-grid{display:grid;grid-template-columns:1.65fr 1fr;gap:16px;align-items:start}
+.cam-stage{position:relative;border-radius:var(--radius);overflow:hidden;background:var(--navy-900);box-shadow:var(--shadow)}
+.cam-stage canvas{width:100%;height:auto}
+.cam-overlay{
+  position:absolute;inset:0;display:none;place-items:center;flex-direction:column;gap:10px;
+  background:rgba(8,20,40,.86);backdrop-filter:blur(3px);color:#fff;text-align:center;padding:20px;
+}
+.cam-overlay.show{display:grid}
+.cam-overlay b{font-family:var(--font-display);letter-spacing:.2em;font-size:1.05rem;color:var(--blue-300)}
+.cam-overlay p{font-size:.85rem;color:rgba(210,228,248,.75);max-width:34ch}
+.cam-badge{
+  position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:7px;
+  background:rgba(8,20,40,.65);border:1px solid rgba(160,205,250,.3);
+  color:#fff;font-size:.72rem;font-weight:600;letter-spacing:.08em;
+  padding:5px 11px;border-radius:999px;backdrop-filter:blur(6px);
+}
+.cam-badge .rec{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1.4s infinite}
+.cam-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.cam-meta .timer{font-size:.82rem;color:var(--ink-soft)}
+.cam-meta .timer b{font-family:var(--font-mono);color:var(--navy-800)}
+
+.cap-list{display:grid;gap:12px;margin-top:6px;max-height:520px;overflow:auto;padding-right:4px}
+.cap-item{
+  display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;
+  padding:10px;border-radius:var(--radius-sm);
+  background:rgba(255,255,255,.7);border:1px solid var(--line);
+}
+.cap-item img{width:96px;height:58px;object-fit:cover;border-radius:8px}
+.cap-item b{font-size:.85rem;color:var(--navy-800);display:block}
+.cap-item span{font-size:.76rem;color:var(--muted);font-family:var(--font-mono)}
+.cap-empty{padding:26px 14px;text-align:center;color:var(--muted);font-size:.88rem;border:1px dashed var(--line);border-radius:var(--radius-sm)}
+
+/* ============================================================
+   HISTORY — flow 1.3
+   ============================================================ */
+.hist-bar{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;
+  padding:14px;border-radius:var(--radius);
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(12px);box-shadow:var(--shadow-soft);
+}
+.hist-bar select,.hist-bar input{
+  padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--line);
+  background:rgba(255,255,255,.85);font-size:.9rem;
+}
+.hist-bar input{flex:1;min-width:170px}
+.hist-bar select:focus,.hist-bar input:focus{outline:none;border-color:var(--blue-500);box-shadow:0 0 0 4px rgba(77,163,255,.18)}
+.hist-count{font-size:.82rem;color:var(--muted);margin-left:auto}
+
+.table-card{border-radius:var(--radius);overflow:hidden;background:rgba(255,255,255,.78);border:1px solid var(--glass-border);box-shadow:var(--shadow-soft);backdrop-filter:blur(12px)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+thead th{
+  text-align:left;padding:13px 18px;font-size:.72rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
+  background:rgba(238,244,252,.9);border-bottom:1px solid var(--line);
+}
+tbody td{padding:13px 18px;border-bottom:1px solid rgba(220,228,240,.7);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(220,235,255,.32)}
+td.time{font-family:var(--font-mono);font-size:.78rem;color:var(--ink-soft);white-space:nowrap}
+td .detail{display:block;font-size:.79rem;color:var(--muted);margin-top:2px}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:600}
+.badge.Appliance{background:rgba(46,124,246,.12);color:var(--blue-600)}
+.badge.Camera{background:rgba(232,161,60,.15);color:#A8731F}
+.badge.Account{background:rgba(31,164,99,.12);color:#157A4A}
+.badge.Settings{background:rgba(125,93,224,.13);color:#6A4FC8}
+.badge.System{background:rgba(138,151,172,.16);color:var(--ink-soft)}
+
+.state-row{padding:42px 20px;text-align:center;color:var(--muted);font-size:.92rem}
+.state-row .spin{
+  width:26px;height:26px;border-radius:50%;margin:0 auto 12px;
+  border:3px solid var(--blue-100);border-top-color:var(--blue-600);
+  animation:rot 1s linear infinite;
+}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ============================================================
+   SETTINGS — flow 1.4
+   ============================================================ */
+.set-wrap{max-width:660px}
+.set-card{
+  padding:30px;border-radius:var(--radius-lg);
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(14px);box-shadow:var(--shadow);
+}
+.set-row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.set-toggle{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 16px;border-radius:var(--radius-sm);
+  background:rgba(255,255,255,.7);border:1px solid var(--line);margin-bottom:16px;
+}
+.set-toggle b{font-size:.92rem;color:var(--navy-800)}
+.set-toggle p{font-size:.79rem;color:var(--muted);margin-top:1px}
+.set-actions{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+
+/* ============================================================
+   Toasts (notifications — flow 1.2 "Send Notifications")
+   ============================================================ */
+.toasts{position:fixed;top:84px;right:20px;z-index:90;display:flex;flex-direction:column;gap:10px;max-width:330px}
+.toast{
+  display:flex;gap:11px;align-items:flex-start;
+  padding:13px 15px;border-radius:14px;
+  background:rgba(10,34,64,.92);color:#fff;font-size:.86rem;
+  border:1px solid rgba(124,196,255,.3);
+  box-shadow:0 14px 34px -10px rgba(8,27,54,.6);
+  backdrop-filter:blur(10px);
+  animation:toastIn .3s ease both;
+}
+.toast.out{animation:toastOut .3s ease both}
+.toast .tdot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+.toast.ok .tdot{background:var(--green);box-shadow:0 0 8px var(--green)}
+.toast.warn .tdot{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.toast.err .tdot{background:var(--red);box-shadow:0 0 8px var(--red)}
+.toast.info .tdot{background:var(--blue-500);box-shadow:0 0 8px var(--blue-500)}
+@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateX(16px)}}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+footer{margin-top:70px;padding:30px 0 36px;border-top:1px solid var(--line)}
+.foot-inner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.84rem}
+.foot-inner .fb{display:flex;align-items:center;gap:9px;color:var(--ink-soft);font-weight:600}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media(max-width:980px){
+  .hero-grid{grid-template-columns:1fr;padding:48px 34px}
+  .hero-fig{max-width:560px}
+  .chip.c1{left:2%}.chip.c2{right:0}
+  .flow-strip,.features{grid-template-columns:repeat(2,1fr)}
+  .flow-step::after{display:none}
+  .grid-cards{grid-template-columns:repeat(2,1fr)}
+  .dash-lower,.cam-grid{grid-template-columns:1fr}
+}
+@media(max-width:860px){
+  .nav-menu{display:none}
+  .nav-inner{position:relative}
+  .nav-inner.open .nav-menu{
+    display:flex;flex-direction:column;align-items:stretch;gap:8px;
+    position:absolute;top:60px;left:0;right:0;
+    background:rgba(255,255,255,.97);border:1px solid var(--glass-border);
+    border-radius:16px;padding:12px;box-shadow:var(--shadow);backdrop-filter:blur(16px);
+  }
+  .nav-inner.open .nav-links{flex-direction:column;margin-left:0}
+  .nav-inner.open .nav-links button{text-align:left;padding:12px 14px;width:100%}
+  .nav-inner.open .nav-auth{flex-direction:column;align-items:stretch;margin-left:0;border-top:1px solid var(--line);padding-top:10px}
+  .burger{display:grid;place-items:center}
+}
+@media(max-width:640px){
+  .wrap{padding:0 16px}
+  .hero-grid{padding:38px 22px}
+  .flow-strip,.features,.grid-cards{grid-template-columns:1fr}
+  .set-row2{grid-template-columns:1fr}
+  .cta-band{padding:32px 26px}
+  thead th:nth-child(4),tbody td:nth-child(4){display:none}
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div class="bg-tint"></div>
+
+<!-- ============ NAVIGATION ============ -->
+<nav class="nav">
+  <div class="nav-inner" id="navInner">
+    <a class="brand" href="#" data-go="home">
+      <span class="brand-mark">
+        <svg viewBox="0 0 64 64" fill="none"><path d="M23.3 29.7 A 13 13 0 0 0 40.7 29.7" stroke="#4DA3FF" stroke-width="5" stroke-linecap="round"/><path d="M17.9 35.6 A 21 21 0 0 0 46.1 35.6" stroke="#2E7CF6" stroke-width="4.5" stroke-linecap="round" opacity=".8"/><path d="M12.6 41.6 A 29 29 0 0 0 51.4 41.6" stroke="#2E7CF6" stroke-width="4" stroke-linecap="round" opacity=".55"/><circle cx="32" cy="20" r="6.5" fill="#4DA3FF"/><path d="M16 52 H48" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".2"/><circle cx="32" cy="52" r="3.2" fill="#9CCBFF"/></svg>
+      </span>
+      <span>AutoClass<small>Classroom Automation</small></span>
+    </a>
+
+    <div class="nav-menu" id="navMenu">
+      <ul class="nav-links" id="navLinks">
+        <li><button data-go="home" class="active">Home</button></li>
+        <li><button data-go="dashboard">Dashboard</button></li>
+        <li><button data-go="camera">Camera</button></li>
+        <li><button data-go="history">History</button></li>
+        <li><button data-go="settings">Settings</button></li>
+      </ul>
+      <div class="nav-auth">
+        <span class="user-chip" id="userChip">
+          <span class="avatar" id="userInitials">U</span>
+          <span id="userName">User</span>
+        </span>
+        <button class="btn btn-ghost btn-sm" id="btnNavLogin" data-go="login">Sign in</button>
+        <button class="btn btn-primary btn-sm" id="btnNavSignup" data-go="signup">Create account</button>
+        <button class="btn btn-danger btn-sm" id="btnLogout" style="display:none">Sign out</button>
+      </div>
+    </div>
+
+    <button class="burger" id="burger" aria-label="Open menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ===================================================
+     VIEW: HOME  (Main Menu — start of flow 1.0)
+     =================================================== -->
+<section class="view active" id="view-home">
+  <div class="wrap">
+
+    <div class="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow"><span class="dot"></span> Automatic Classroom Device Controller System</span>
+          <h1>Transforming Classrooms Through <em>Smart Automation</em></h1>
+          <p class="lead">AutoClass senses occupancy with PIR, DHT22, and microwave sensors, switches classroom appliances on and off automatically, watches the room with motion-triggered cameras, and keeps a complete activity log.</p>
+          <div class="hero-cta">
+            <button class="btn btn-primary" data-go="signup">Get started</button>
+            <button class="btn btn-light" data-go="login">Sign in to dashboard</button>
+          </div>
+          <div class="hero-stats">
+            <div class="hstat"><b>3 sensors</b><span>PIR · DHT22 · Microwave</span></div>
+            <div class="hstat"><b>Auto on/off</b><span>Lights, aircon, projector</span></div>
+            <div class="hstat"><b>24/7 logs</b><span>Every event saved to the database</span></div>
+          </div>
+        </div>
+
+        <!-- Illustrated futuristic classroom with live telemetry chips -->
+        <div class="hero-fig">
+          <div class="room">
+            <svg viewBox="0 0 560 430" role="img" aria-label="Futuristic classroom with sensors, smart board and camera">
+              <defs>
+                <linearGradient id="gBoard" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#4DA3FF"/><stop offset="1" stop-color="#7CC4FF"/>
+                </linearGradient>
+                <radialGradient id="gFloor" cx="50%" cy="0%" r="80%">
+                  <stop offset="0" stop-color="#2E7CF6" stop-opacity=".22"/><stop offset="1" stop-color="#2E7CF6" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+
+              <!-- floor glow + perspective lines -->
+              <rect x="0" y="245" width="560" height="185" fill="url(#gFloor)"/>
+              <g stroke="#9CCBFF" stroke-opacity=".16">
+                <line x1="280" y1="248" x2="40"  y2="430"/><line x1="280" y1="248" x2="160" y2="430"/>
+                <line x1="280" y1="248" x2="280" y2="430"/><line x1="280" y1="248" x2="400" y2="430"/>
+                <line x1="280" y1="248" x2="520" y2="430"/>
+                <line x1="60" y1="290" x2="500" y2="290"/><line x1="30" y1="345" x2="530" y2="345"/>
+              </g>
+              <line x1="0" y1="248" x2="560" y2="248" stroke="#9CCBFF" stroke-opacity=".25"/>
+
+              <!-- smart board -->
+              <rect x="150" y="66" width="260" height="126" rx="14" fill="rgba(255,255,255,.05)" stroke="url(#gBoard)" stroke-width="2"/>
+              <polyline points="172,166 210,128 244,148 286,104 322,126 358,92 388,108" fill="none" stroke="#7CC4FF" stroke-width="2.5" stroke-linecap="round"/>
+              <g fill="#4DA3FF" fill-opacity=".55">
+                <rect x="176" y="86" width="34" height="7" rx="3.5"/>
+                <rect x="176" y="100" width="22" height="7" rx="3.5"/>
+              </g>
+              <circle cx="388" cy="108" r="4.5" fill="#fff"/>
+              <rect x="266" y="192" width="28" height="22" rx="4" fill="rgba(156,203,255,.25)"/>
+
+              <!-- ceiling PIR sensor with pulse rings -->
+              <line x1="280" y1="0" x2="280" y2="22" stroke="#9CCBFF" stroke-opacity=".5"/>
+              <circle class="ring"    cx="280" cy="32" r="22" fill="none" stroke="#4DA3FF" stroke-width="1.5"/>
+              <circle class="ring r2" cx="280" cy="32" r="22" fill="none" stroke="#4DA3FF" stroke-width="1.5"/>
+              <circle cx="280" cy="32" r="8" fill="#7CC4FF"/>
+              <circle cx="280" cy="32" r="3.2" fill="#0A2240"/>
+
+              <!-- security camera, top right -->
+              <g>
+                <line x1="544" y1="30" x2="514" y2="46" stroke="#9CCBFF" stroke-opacity=".6" stroke-width="3"/>
+                <rect x="478" y="40" width="44" height="24" rx="8" fill="#123363" stroke="#9CCBFF" stroke-opacity=".55"/>
+                <circle cx="490" cy="52" r="6" fill="#7CC4FF"/><circle cx="490" cy="52" r="2.4" fill="#0A2240"/>
+                <line x1="482" y1="70" x2="380" y2="190" stroke="#7CC4FF" stroke-opacity=".4" stroke-dasharray="4 7"/>
+                <line x1="500" y1="72" x2="468" y2="200" stroke="#7CC4FF" stroke-opacity=".4" stroke-dasharray="4 7"/>
+              </g>
+
+              <!-- smart desks -->
+              <g stroke="#9CCBFF" stroke-opacity=".7" fill="rgba(255,255,255,.06)">
+                <g>
+                  <rect x="56"  y="296" width="116" height="15" rx="7.5"/>
+                  <line x1="70"  y1="311" x2="70"  y2="352"/><line x1="158" y1="311" x2="158" y2="352"/>
+                  <circle cx="114" cy="296" r="4" fill="#4DA3FF" stroke="none"/>
+                </g>
+                <g>
+                  <rect x="226" y="312" width="116" height="15" rx="7.5"/>
+                  <line x1="240" y1="327" x2="240" y2="372"/><line x1="328" y1="327" x2="328" y2="372"/>
+                  <circle cx="284" cy="312" r="4" fill="#4DA3FF" stroke="none"/>
+                </g>
+                <g>
+                  <rect x="396" y="296" width="116" height="15" rx="7.5"/>
+                  <line x1="410" y1="311" x2="410" y2="352"/><line x1="498" y1="311" x2="498" y2="352"/>
+                  <circle cx="454" cy="296" r="4" fill="#4DA3FF" stroke="none"/>
+                </g>
+              </g>
+
+              <!-- ambient sparks -->
+              <circle class="spark"    cx="96"  cy="120" r="3"   fill="#7CC4FF" opacity=".7"/>
+              <circle class="spark s2" cx="470" cy="150" r="2.4" fill="#9CCBFF" opacity=".6"/>
+              <circle class="spark s3" cx="60"  cy="210" r="2"   fill="#4DA3FF" opacity=".7"/>
+            </svg>
+          </div>
+
+          <!-- live telemetry chips, driven by the same simulation as the dashboard -->
+          <div class="chip c1"><div><small>DHT22 · climate</small><b id="heroTemp">--.- °C · -- %</b></div></div>
+          <div class="chip c2"><span class="cdot" id="heroOccDot"></span><div><small>Occupancy</small><b id="heroOcc">Scanning…</b></div></div>
+          <div class="chip c3"><div><small>Appliances</small><b id="heroAppl">0 of 3 on</b></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works: the actual control loop from flowchart 1.1 -->
+    <div class="section">
+      <div class="sec-head">
+        <span class="kicker">How it works</span>
+        <h2>One loop, from sensor to log</h2>
+        <p>Every cycle of the system follows the same path — the same flow you'll see live on the dashboard.</p>
+      </div>
+      <div class="flow-strip">
+        <div class="flow-step"><span class="num">01</span><h3>Sense</h3><p>PIR, DHT22, and microwave sensors stream motion, temperature, and humidity from the room.</p></div>
+        <div class="flow-step"><span class="num">02</span><h3>Decide</h3><p>The system processes readings in real time and checks whether the room is occupied.</p></div>
+        <div class="flow-step"><span class="num">03</span><h3>Act</h3><p>Appliances switch on while the room is in use and power down after a no-motion timer.</p></div>
+        <div class="flow-step"><span class="num">04</span><h3>Log</h3><p>Every action is recorded and saved to the database for the history page.</p></div>
+      </div>
+    </div>
+
+    <!-- Feature cards map to the app's pages -->
+    <div class="section">
+      <div class="sec-head">
+        <span class="kicker">Inside the system</span>
+        <h2>Everything the classroom needs, in one place</h2>
+      </div>
+      <div class="features">
+        <button class="feature" data-go="dashboard">
+          <span class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+          <h3>Live dashboard</h3>
+          <p>Real-time sensor readings, occupancy status, and automatic appliance control.</p>
+          <span class="go">Open dashboard →</span>
+        </button>
+        <button class="feature" data-go="camera">
+          <span class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h9A2.5 2.5 0 0 1 17 8.5v7a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 3 15.5z"/><path d="M17 10.5l4-2.5v8l-4-2.5"/></svg></span>
+          <h3>Camera security</h3>
+          <p>Motion-triggered captures with instant notifications and an inactivity standby timer.</p>
+          <span class="go">Open camera →</span>
+        </button>
+        <button class="feature" data-go="history">
+          <span class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg></span>
+          <h3>History records</h3>
+          <p>Filter, search, and reload every log the system has saved to the database.</p>
+          <span class="go">Open history →</span>
+        </button>
+        <button class="feature" data-go="settings">
+          <span class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z"/></svg></span>
+          <h3>Configurable settings</h3>
+          <p>Tune timers, temperature thresholds, and alerts — validated before they're saved.</p>
+          <span class="go">Open settings →</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="cta-band">
+      <div>
+        <h2>Ready to automate your classroom?</h2>
+        <p>Create an account, sign in, and watch the system run the full sensing loop live.</p>
+      </div>
+      <button class="btn btn-light" data-go="signup">Create your account</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===================================================
+     VIEW: CREATE ACCOUNT  (flowchart 1.0 — Account Creation)
+     Input full name, email, phone, password →
+     empty-input check → save to database → back to main menu
+     =================================================== -->
+<section class="view" id="view-signup">
+  <div class="wrap auth-wrap">
+    <div class="auth-card">
+      <h2>Create your account</h2>
+      <p class="sub">Set up access to the classroom dashboard, camera, and history.</p>
+
+      <div class="banner error" id="suBanner"><span>⚠</span><span id="suBannerText">Please fill in all fields.</span></div>
+
+      <form id="signupForm" novalidate>
+        <div class="field">
+          <label for="suName">Full name</label>
+          <input type="text" id="suName" placeholder="e.g. Juan Dela Cruz" autocomplete="name">
+          <span class="err" id="eSuName">Full name is required.</span>
+        </div>
+        <div class="field">
+          <label for="suEmail">Email</label>
+          <input type="email" id="suEmail" placeholder="you@school.edu" autocomplete="email">
+          <span class="err" id="eSuEmail">Enter a valid email address.</span>
+        </div>
+        <div class="field">
+          <label for="suPhone">Phone number</label>
+          <input type="tel" id="suPhone" placeholder="09XX XXX XXXX" autocomplete="tel">
+          <span class="err" id="eSuPhone">Phone number is required.</span>
+        </div>
+        <div class="field">
+          <label for="suPass">Password</label>
+          <input type="password" id="suPass" placeholder="At least 6 characters" autocomplete="new-password">
+          <span class="err" id="eSuPass">Password must be at least 6 characters.</span>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Create account</button>
+      </form>
+
+      <p class="auth-foot">Already have an account? <button data-go="login">Sign in</button></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
+     VIEW: SIGN IN  (flowchart 1.1 — Login Account → Dashboard / Exit)
+     =================================================== -->
+<section class="view" id="view-login">
+  <div class="wrap auth-wrap">
+    <div class="auth-card">
+      <h2>Welcome back</h2>
+      <p class="sub">Sign in to open your classroom dashboard.</p>
+
+      <div class="banner error" id="liBanner"><span>⚠</span><span id="liBannerText">Incorrect email or password.</span></div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="liEmail">Email</label>
+          <input type="email" id="liEmail" placeholder="you@school.edu" autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="liPass">Password</label>
+          <input type="password" id="liPass" placeholder="Your password" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Sign in</button>
+      </form>
+
+      <div class="demo-tip">Demo account — email: demo@school.edu · password: demo1234</div>
+      <p class="auth-foot">New here? <button data-go="signup">Create an account</button> · <button data-go="home">Exit to home</button></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
+     VIEW: DASHBOARD  (flowchart 1.1)
+     get sensor data → process → real-time display →
+     motion? YES: occupy room + appliances on + log
+             NO:  no-motion timer → appliances off + log
+     =================================================== -->
+<section class="view" id="view-dashboard">
+  <div class="wrap">
+    <div class="dash-top">
+      <div>
+        <h2 id="roomTitle">Room 204</h2>
+        <p class="sub">Live sensor feed · updates every 2 seconds</p>
+      </div>
+      <div class="dash-controls">
+        <span class="pill off" id="occPill"><span class="pdot"></span><span id="occText">Room vacant</span></span>
+        <label class="sw-label"><span class="switch"><input type="checkbox" id="autoSim" checked><span class="track"></span></span> Auto-simulate motion</label>
+        <button class="btn btn-primary btn-sm" id="btnMotion">Simulate motion</button>
+      </div>
+    </div>
+
+    <!-- Sensor cards -->
+    <div class="grid-cards">
+      <div class="card">
+        <h3><span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9"/><path d="M4.6 4.6a10.5 10.5 0 0 0 0 14.8M19.4 4.6a10.5 10.5 0 0 1 0 14.8"/></svg></span> PIR motion sensor</h3>
+        <div class="sensor-val" id="pirVal">—</div>
+        <p class="sensor-sub" id="pirSub">Passive infrared · ceiling mounted</p>
+        <p class="updated">Updated <span id="updPir">—</span></p>
+      </div>
+      <div class="card">
+        <h3><span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 14.8V5a2 2 0 1 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v6"/></svg></span> DHT22 climate</h3>
+        <div class="sensor-val"><span id="tempVal">--.-</span><small> °C</small>&nbsp;&nbsp;<span id="humVal">--</span><small> %</small></div>
+        <p class="sensor-sub">Temperature · relative humidity</p>
+        <p class="updated">Aircon threshold: <span id="thrText">26</span> °C</p>
+      </div>
+      <div class="card">
+        <h3><span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg></span> Microwave sensor</h3>
+        <div class="sensor-val" id="microVal">—</div>
+        <p class="sensor-sub">Doppler radar · backup motion detection</p>
+        <p class="updated">Updated <span id="updMicro">—</span></p>
+      </div>
+    </div>
+
+    <div class="dash-lower">
+      <!-- Automation: occupancy → appliances -->
+      <div class="card">
+        <h3><span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span> Appliance automation</h3>
+
+        <div class="vac" id="vacWrap">
+          <small>No motion detected — appliances power off in <b id="vacSecs">--</b>s</small>
+          <div class="vac-bar"><div class="vac-fill" id="vacFill"></div></div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="ap-row" data-ap="lights">
+            <span class="ap-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.3 2.2h4.6c.2-.9.6-1.6 1.3-2.2A6 6 0 0 0 12 3z"/></svg> Lights</span>
+            <span class="ap-state">
+              <span class="pill off" id="apPill-lights"><span class="pdot"></span><span>Off</span></span>
+              <span class="switch"><input type="checkbox" id="apSw-lights" aria-label="Toggle lights"><span class="track"></span></span>
+            </span>
+          </div>
+          <div class="ap-row" data-ap="aircon">
+            <span class="ap-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M4.9 6.5 19.1 17.5M19.1 6.5 4.9 17.5"/><path d="m9.5 4 2.5 2 2.5-2M9.5 20l2.5-2 2.5 2"/></svg> Air conditioner</span>
+            <span class="ap-state">
+              <span class="pill off" id="apPill-aircon"><span class="pdot"></span><span>Off</span></span>
+              <span class="switch"><input type="checkbox" id="apSw-aircon" aria-label="Toggle air conditioner"><span class="track"></span></span>
+            </span>
+          </div>
+          <div class="ap-row" data-ap="projector">
+            <span class="ap-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="11" rx="3"/><circle cx="9" cy="12.5" r="3"/><path d="M16 11h3M16 14h3M7 21h4M14 21h3"/></svg> Projector</span>
+            <span class="ap-state">
+              <span class="pill off" id="apPill-projector"><span class="pdot"></span><span>Off</span></span>
+              <span class="switch"><input type="checkbox" id="apSw-projector" aria-label="Toggle projector"><span class="track"></span></span>
+            </span>
+          </div>
+        </div>
+        <p class="updated">Switches override automation until the next occupancy change. Every change is logged and saved to the database.</p>
+      </div>
+
+      <!-- Recent activity (latest database logs) -->
+      <div class="card">
+        <h3><span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span> Recent activity</h3>
+        <ul class="recent-list" id="recentList">
+          <li class="empty">No activity yet — simulate motion to start the loop.</li>
+        </ul>
+        <button class="card-link" data-go="history">View full history →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
+     VIEW: CAMERA  (flowchart 1.2)
+     monitoring → motion? YES: capture image → notify → log → save
+                  NO: inactivity timer → deactivate camera
+     motion while in standby reactivates monitoring
+     =================================================== -->
+<section class="view" id="view-camera">
+  <div class="wrap">
+    <div class="page-head">
+      <h2>Camera system</h2>
+      <p>Motion-triggered monitoring with automatic standby after inactivity.</p>
+    </div>
+
+    <div class="cam-grid">
+      <div>
+        <div class="cam-stage">
+          <canvas id="camCanvas" width="960" height="540"></canvas>
+          <span class="cam-badge" id="camBadge"><span class="rec"></span> LIVE · CAM 01</span>
+          <div class="cam-overlay" id="camOverlay">
+            <b>STANDBY</b>
+            <p>Camera deactivated after inactivity. Motion in the room will reactivate monitoring.</p>
+          </div>
+        </div>
+        <div class="cam-meta">
+          <span class="pill on" id="camPill"><span class="pdot"></span><span id="camPillText">Monitoring</span></span>
+          <span class="timer" id="camTimer">Standby in <b id="camSecs">--</b>s without motion</span>
+          <button class="btn btn-primary btn-sm" id="btnMotion2" style="margin-left:auto">Simulate motion</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M9 6l1.2-2h3.6L15 6"/></svg></span> Motion captures</h3>
+        <div class="cap-empty" id="capEmpty">No captures yet. When motion is detected, the camera saves a snapshot here and sends a notification.</div>
+        <div class="cap-list" id="capList"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
+     VIEW: HISTORY  (flowchart 1.3)
+     request logs from db → connection? → logs available? →
+     display all / apply filter → refresh reloads from db
+     =================================================== -->
+<section class="view" id="view-history">
+  <div class="wrap">
+    <div class="page-head">
+      <h2>History records</h2>
+      <p>Every event the system saves to the database — filter it, search it, reload it.</p>
+    </div>
+
+    <div class="hist-bar">
+      <select id="fType" aria-label="Filter by type">
+        <option value="all">All types</option>
+        <option value="Account">Account</option>
+        <option value="Appliance">Appliance</option>
+        <option value="Camera">Camera</option>
+        <option value="Settings">Settings</option>
+        <option value="System">System</option>
+      </select>
+      <input type="search" id="fSearch" placeholder="Search events…" aria-label="Search events">
+      <button class="btn btn-ghost btn-sm" id="btnApply">Apply filter</button>
+      <button class="btn btn-primary btn-sm" id="btnRefresh">Refresh</button>
+      <span class="hist-count" id="histCount"></span>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr><th style="width:130px">Time</th><th style="width:120px">Type</th><th>Event</th><th>Details</th></tr>
+        </thead>
+        <tbody id="histBody"></tbody>
+      </table>
+      <div class="state-row" id="histLoading" style="display:none"><div class="spin"></div>Requesting logs from the database…</div>
+      <div class="state-row" id="histEmpty" style="display:none">No records found.</div>
+      <div class="state-row" id="histError" style="display:none">Error loading data — check the database connection and try refresh.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
+     VIEW: SETTINGS  (flowchart 1.4)
+     show current settings from db → modify? → validate →
+     invalid: error, stay on settings
+     valid: save to db → apply to system → back to dashboard
+     =================================================== -->
+<section class="view" id="view-settings">
+  <div class="wrap set-wrap">
+    <div class="page-head">
+      <h2>Settings</h2>
+      <p>Current values are loaded from the database. Changes apply to the system after they're saved.</p>
+    </div>
+
+    <div class="set-card">
+      <div class="banner error" id="setBanner"><span>⚠</span><span>Some values are invalid — fix the highlighted fields and save again.</span></div>
+
+      <form id="setForm" novalidate>
+        <div class="field">
+          <label for="sRoom">Room name</label>
+          <input type="text" id="sRoom">
+          <span class="err" id="eSRoom">Room name is required.</span>
+        </div>
+
+        <div class="set-row2">
+          <div class="field">
+            <label for="sAutoOff">Appliance auto-off delay (seconds)</label>
+            <input type="number" id="sAutoOff" min="5" max="3600">
+            <span class="err" id="eSAutoOff">Enter a number from 5 to 3600.</span>
+            <span class="hint">Time without motion before appliances turn off.</span>
+          </div>
+          <div class="field">
+            <label for="sCamOff">Camera standby timeout (seconds)</label>
+            <input type="number" id="sCamOff" min="5" max="3600">
+            <span class="err" id="eSCamOff">Enter a number from 5 to 3600.</span>
+            <span class="hint">Time without motion before the camera deactivates.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sTemp">Aircon temperature threshold (°C)</label>
+          <input type="number" id="sTemp" min="16" max="40" step="0.5">
+          <span class="err" id="eSTemp">Enter a temperature from 16 to 40 °C.</span>
+          <span class="hint">When the room is occupied and warmer than this, the air conditioner turns on.</span>
+        </div>
+
+        <div class="set-toggle">
+          <div><b>Motion alert notifications</b><p>Send a notification when the camera captures motion.</p></div>
+          <span class="switch"><input type="checkbox" id="sAlerts"><span class="track"></span></span>
+        </div>
+
+        <div class="set-actions">
+          <button type="submit" class="btn btn-primary">Save changes</button>
+          <button type="button" class="btn btn-ghost" id="btnSetCancel">Cancel — return to dashboard</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <span class="fb">
+      <span class="brand-mark" style="width:28px;height:28px;border-radius:8px"><svg viewBox="0 0 64 64" fill="none" style="width:17px;height:17px"><path d="M23.3 29.7 A 13 13 0 0 0 40.7 29.7" stroke="#4DA3FF" stroke-width="5" stroke-linecap="round"/><path d="M17.9 35.6 A 21 21 0 0 0 46.1 35.6" stroke="#2E7CF6" stroke-width="4.5" stroke-linecap="round" opacity=".8"/><path d="M12.6 41.6 A 29 29 0 0 0 51.4 41.6" stroke="#2E7CF6" stroke-width="4" stroke-linecap="round" opacity=".55"/><circle cx="32" cy="20" r="6.5" fill="#4DA3FF"/><path d="M16 52 H48" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".2"/><circle cx="32" cy="52" r="3.2" fill="#9CCBFF"/></svg></span>
+      AutoClass
+    </span>
+    <span>Automatic Classroom Device Controller System · © <span id="yr">2026</span></span>
+  </div>
+</footer>
+
+<!-- Notifications -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   AutoClass — application logic
+   Implements the system flowcharts:
+     1.0 Account creation   1.1 Dashboard automation loop
+     1.2 Camera system      1.3 History records
+     1.4 Settings
+   The DB object below stands in for the DATABASE symbol in the
+   flowcharts. Swap it for real API calls when a backend exists.
+   ============================================================ */
+
+const $ = (id) => document.getElementById(id);
+
+/* ---------------- In-memory "database" ---------------- */
+const DB = {
+  users: [
+    { name: 'Demo Teacher', email: 'demo@school.edu', phone: '0917 000 0000', pass: 'demo1234' }
+  ],
+  logs: [],       // { t, type, event, details }
+  captures: []    // { t, img }
+};
+
+DB.settings = {
+  room: 'Room 204',
+  autoOff: 20,    // seconds without motion before appliances turn off (flow 1.1)
+  camOff: 35,     // seconds without motion before the camera deactivates (flow 1.2)
+  tempThr: 26,    // °C — aircon turns on above this when occupied
+  alerts: true    // camera motion notifications (flow 1.2 "Send Notifications")
+};
+
+/* ---------------- Live state ---------------- */
+const state = {
+  user: null,
+  view: 'home',
+  temp: 27.4,
+  hum: 61,
+  occupied: false,
+  lastMotion: Date.now() - 120000,
+  cameraActive: true,
+  lastCapture: 0,
+  detBox: null,
+  ap: { lights: false, aircon: false, projector: false }
+};
+
+const PROTECTED = ['dashboard', 'camera', 'history', 'settings'];
+const AP_LABEL = { lights: 'Lights', aircon: 'Air conditioner', projector: 'Projector' };
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- Helpers ---------------- */
+function fmtTime(t) {
+  return new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function fmtFull(t) {
+  return new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function agoText(t) {
+  const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (s < 3) return 'just now';
+  if (s < 60) return s + 's ago';
+  return Math.floor(s / 60) + 'm ago';
+}
+
+/* Creating Log → Saving to DB (used across flows 1.0–1.4) */
+function log(type, event, details) {
+  DB.logs.unshift({ t: Date.now(), type, event, details: details || '' });
+  if (DB.logs.length > 400) DB.logs.pop();
+  renderRecent();
+  if (state.view === 'history') renderHistory(filteredLogs());
+}
+
+/* Notifications (flow 1.2 "Send Notifications") */
+function toast(msg, kind) {
+  const box = document.createElement('div');
+  box.className = 'toast ' + (kind || 'info');
+  box.innerHTML = '<span class="tdot"></span><span></span>';
+  box.lastElementChild.textContent = msg;
+  $('toasts').appendChild(box);
+  setTimeout(() => {
+    box.classList.add('out');
+    setTimeout(() => box.remove(), 320);
+  }, 4200);
+}
+
+/* ============================================================
+   Routing — Main Menu and views
+   ============================================================ */
+function showView(name) {
+  if (PROTECTED.includes(name) && !state.user) {
+    toast('Sign in first to open the ' + name + ' page.', 'warn');
+    name = 'login';
+  }
+  state.view = name;
+
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = $('view-' + name);
+  if (target) target.classList.add('active');
+
+  document.querySelectorAll('.nav-links button').forEach(b => {
+    b.classList.toggle('active', b.dataset.go === name);
+  });
+
+  $('navInner').classList.remove('open');
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+
+  if (name === 'dashboard') updateLiveUI(Date.now());
+  if (name === 'camera') { updateLiveUI(Date.now()); renderCaptures(); }
+  if (name === 'history') loadHistory(true);      // requesting logs from db (flow 1.3)
+  if (name === 'settings') fillSettings();        // show current settings from DB (flow 1.4)
+}
+
+/* Any element with data-go switches views */
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-go]');
+  if (el) { e.preventDefault(); showView(el.dataset.go); }
+});
+
+/* ============================================================
+   1.0 — Account creation
+   Input full name, email, phone, password → empty-input check →
+   save to database → "Account created" → back to Main Menu
+   ============================================================ */
+function setFieldError(input, errEl, bad) {
+  input.classList.toggle('invalid', bad);
+  errEl.classList.toggle('show', bad);
+}
+
+$('signupForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = $('suName').value.trim();
+  const email = $('suEmail').value.trim().toLowerCase();
+  const phone = $('suPhone').value.trim();
+  const pass = $('suPass').value;
+
+  const emptyAny = !name || !email || !phone || !pass;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const passOk = pass.length >= 6;
+
+  setFieldError($('suName'), $('eSuName'), !name);
+  setFieldError($('suEmail'), $('eSuEmail'), !email || !emailOk);
+  setFieldError($('suPhone'), $('eSuPhone'), !phone);
+  setFieldError($('suPass'), $('eSuPass'), !pass || !passOk);
+
+  const banner = $('suBanner');
+  /* Empty Input? — YES → "No inputs", return to the form */
+  if (emptyAny) {
+    $('suBannerText').textContent = 'No inputs detected — please fill in all fields.';
+    banner.classList.add('show');
+    return;
+  }
+  if (!emailOk || !passOk) {
+    $('suBannerText').textContent = 'Fix the highlighted fields to continue.';
+    banner.classList.add('show');
+    return;
+  }
+  if (DB.users.some(u => u.email === email)) {
+    $('suBannerText').textContent = 'An account with this email already exists. Try signing in.';
+    banner.classList.add('show');
+    return;
+  }
+
+  /* NO → account created → saved to DATABASE */
+  banner.classList.remove('show');
+  DB.users.push({ name, email, phone, pass });
+  log('Account', 'Account created', email);
+  e.target.reset();
+  ['suName', 'suEmail', 'suPhone', 'suPass'].forEach(id => $(id).classList.remove('invalid'));
+  toast('Account created — sign in to continue.', 'ok');
+  showView('home');   // connector A → back to Main Menu
+});
+
+/* ============================================================
+   1.1 — Login Account → Dashboard (or Exit)
+   ============================================================ */
+$('loginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = $('liEmail').value.trim().toLowerCase();
+  const pass = $('liPass').value;
+  const user = DB.users.find(u => u.email === email && u.pass === pass);
+
+  if (!user) {
+    $('liBannerText').textContent = !email || !pass
+      ? 'Enter your email and password.'
+      : 'Incorrect email or password.';
+    $('liBanner').classList.add('show');
+    return;
+  }
+  $('liBanner').classList.remove('show');
+  state.user = user;
+  updateAuthUI();
+  log('Account', 'Signed in', user.email);
+  toast('Welcome back, ' + user.name.split(' ')[0] + '.', 'ok');
+  e.target.reset();
+  showView('dashboard');
+});
+
+$('btnLogout').addEventListener('click', () => {
+  if (state.user) log('Account', 'Signed out', state.user.email);
+  state.user = null;
+  updateAuthUI();
+  toast('Signed out.', 'info');
+  showView('home');
+});
+
+function updateAuthUI() {
+  const logged = !!state.user;
+  $('userChip').classList.toggle('show', logged);
+  $('btnLogout').style.display = logged ? '' : 'none';
+  $('btnNavLogin').style.display = logged ? 'none' : '';
+  $('btnNavSignup').style.display = logged ? 'none' : '';
+  if (logged) {
+    $('userName').textContent = state.user.name.split(' ')[0];
+    $('userInitials').textContent = state.user.name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+}
+
+/* Mobile menu */
+$('burger').addEventListener('click', () => $('navInner').classList.toggle('open'));
+
+/* ============================================================
+   1.1 — Sensor loop
+   get sensor data (PIR, DHT22, microwave) → processing →
+   real-time display → motion? → occupy / no-motion timer
+   ============================================================ */
+function tick() {
+  const now = Date.now();
+
+  /* DHT22 drift */
+  state.temp = Math.min(33, Math.max(22, state.temp + (Math.random() - 0.5) * 0.36 + (state.occupied ? 0.03 : -0.02)));
+  state.hum = Math.min(75, Math.max(45, state.hum + (Math.random() - 0.5) * 1.4));
+
+  /* Simulated motion source (stands in for the physical sensors) */
+  if ($('autoSim').checked) {
+    const p = state.occupied ? 0.7 : 0.08;
+    if (Math.random() < p) registerMotion();
+  }
+
+  /* Motion Detected? — NO → start timer → time exceeded → turn off appliances */
+  if (state.occupied && now - state.lastMotion > DB.settings.autoOff * 1000) becomeVacant();
+
+  /* Camera inactivity (flow 1.2): no motion → timer exceeded → deactivate */
+  if (state.cameraActive && now - state.lastMotion > DB.settings.camOff * 1000) camStandby();
+
+  updateLiveUI(now);
+}
+
+/* A motion event from PIR/microwave (or the Simulate button) */
+function registerMotion() {
+  const now = Date.now();
+  state.lastMotion = now;
+  state.detBox = {
+    x: 0.12 + Math.random() * 0.45,
+    y: 0.28 + Math.random() * 0.3,
+    w: 0.16 + Math.random() * 0.1,
+    h: 0.26 + Math.random() * 0.12
+  };
+
+  /* Motion Detected? — YES → room is occupied → turn on appliances → log */
+  if (!state.occupied) becomeOccupied();
+
+  /* Flow 1.2: motion wakes a standby camera, or triggers a capture */
+  if (!state.cameraActive) camWake();
+  else if (now - state.lastCapture > 8000) captureImage();
+}
+
+function becomeOccupied() {
+  state.occupied = true;
+  const turnedOn = [];
+  if (setAppliance('lights', true)) turnedOn.push('lights');
+  if (setAppliance('projector', true)) turnedOn.push('projector');
+  const wantAC = state.temp >= DB.settings.tempThr;
+  if (setAppliance('aircon', wantAC) && wantAC) turnedOn.push('aircon');
+  log('Appliance', 'Room occupied — appliances on',
+    'Motion detected · ' + (turnedOn.length ? turnedOn.join(', ') : 'no changes') +
+    (wantAC ? '' : ' · aircon stayed off (below ' + DB.settings.tempThr + ' °C)'));
+}
+
+function becomeVacant() {
+  state.occupied = false;
+  ['lights', 'aircon', 'projector'].forEach(a => setAppliance(a, false));
+  log('Appliance', 'Appliances turned off', 'No motion for ' + DB.settings.autoOff + 's — room vacant');
+}
+
+/* Returns true when the state actually changed */
+function setAppliance(name, on) {
+  if (state.ap[name] === on) return false;
+  state.ap[name] = on;
+  const sw = $('apSw-' + name);
+  if (sw) sw.checked = on;
+  const pill = $('apPill-' + name);
+  if (pill) {
+    pill.className = 'pill ' + (on ? 'on' : 'off');
+    pill.lastElementChild.textContent = on ? 'On' : 'Off';
+  }
+  return true;
+}
+
+/* Manual override switches (logged, like every appliance change) */
+['lights', 'aircon', 'projector'].forEach(name => {
+  $('apSw-' + name).addEventListener('change', (e) => {
+    const on = e.target.checked;
+    setAppliance(name, on);
+    log('Appliance', AP_LABEL[name] + ' turned ' + (on ? 'on' : 'off'), 'Manual override from dashboard');
+  });
+});
+
+$('btnMotion').addEventListener('click', registerMotion);
+$('btnMotion2').addEventListener('click', registerMotion);
+
+/* ---------------- Real-time display ---------------- */
+function updateLiveUI(now) {
+  const motionRecent = now - state.lastMotion < 4000;
+  const onCount = Object.values(state.ap).filter(Boolean).length;
+
+  /* Hero telemetry chips (home page) */
+  $('heroTemp').textContent = state.temp.toFixed(1) + ' °C · ' + Math.round(state.hum) + ' %';
+  $('heroOcc').textContent = state.occupied ? 'Occupied' : 'Vacant';
+  const dot = $('heroOccDot');
+  dot.style.background = state.occupied ? 'var(--green)' : 'var(--muted)';
+  dot.style.boxShadow = state.occupied ? '0 0 10px var(--green)' : 'none';
+  $('heroAppl').textContent = onCount + ' of 3 on';
+
+  if (state.view === 'dashboard') {
+    $('pirVal').textContent = motionRecent ? 'Motion' : 'Clear';
+    $('pirVal').style.color = motionRecent ? 'var(--green)' : '';
+    $('updPir').textContent = agoText(state.lastMotion);
+
+    $('tempVal').textContent = state.temp.toFixed(1);
+    $('humVal').textContent = Math.round(state.hum);
+    $('thrText').textContent = DB.settings.tempThr;
+
+    const micro = motionRecent || Math.random() < 0.04;
+    $('microVal').textContent = micro ? 'Active' : 'Idle';
+    $('microVal').style.color = micro ? 'var(--green)' : '';
+    $('updMicro').textContent = agoText(state.lastMotion);
+
+    const pill = $('occPill');
+    pill.className = 'pill ' + (state.occupied ? 'on' : 'off');
+    $('occText').textContent = state.occupied ? 'Occupied' : 'Room vacant';
+
+    /* No-motion countdown to auto-off */
+    const counting = state.occupied && !motionRecent;
+    $('vacWrap').classList.toggle('show', counting);
+    if (counting) {
+      const remain = Math.max(0, DB.settings.autoOff - (now - state.lastMotion) / 1000);
+      $('vacSecs').textContent = Math.ceil(remain);
+      $('vacFill').style.width = (remain / DB.settings.autoOff * 100) + '%';
+    }
+  }
+
+  if (state.view === 'camera') {
+    const pill = $('camPill');
+    pill.className = 'pill ' + (state.cameraActive ? 'on' : 'warn');
+    $('camPillText').textContent = state.cameraActive ? 'Monitoring' : 'Standby';
+    if (state.cameraActive) {
+      const remain = Math.max(0, DB.settings.camOff - (now - state.lastMotion) / 1000);
+      $('camTimer').firstChild.textContent = 'Standby in ';
+      $('camSecs').textContent = Math.ceil(remain);
+    } else {
+      $('camSecs').textContent = '—';
+    }
+  }
+}
+
+/* ---------------- Recent activity card ---------------- */
+function renderRecent() {
+  const list = $('recentList');
+  const items = DB.logs.slice(0, 5);
+  if (!items.length) {
+    list.innerHTML = '<li class="empty">No activity yet — simulate motion to start the loop.</li>';
+    return;
+  }
+  list.innerHTML = '';
+  items.forEach(l => {
+    const li = document.createElement('li');
+    const t = document.createElement('span');
+    t.className = 't';
+    t.textContent = fmtTime(l.t);
+    const txt = document.createElement('span');
+    txt.textContent = l.event;
+    li.appendChild(t);
+    li.appendChild(txt);
+    list.appendChild(li);
+  });
+}
+
+/* ============================================================
+   1.2 — Camera system
+   monitoring → motion → capture image → notify → log → save
+   inactivity → deactivate camera; motion reactivates it
+   ============================================================ */
+const cam = $('camCanvas');
+const ctx = cam.getContext('2d');
+let lastFrame = 0;
+
+function drawFrame(now) {
+  const w = cam.width, h = cam.height;
+
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, '#0B1F3C');
+  g.addColorStop(1, '#102E58');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+
+  /* room grid */
+  ctx.strokeStyle = 'rgba(124,196,255,.07)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= w; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y <= h; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  /* desk silhouettes */
+  ctx.fillStyle = 'rgba(255,255,255,.06)';
+  [[0.1, 0.62], [0.42, 0.68], [0.72, 0.6]].forEach(d => {
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(d[0] * w, d[1] * h, 0.2 * w, 0.05 * h, 10);
+    else ctx.rect(d[0] * w, d[1] * h, 0.2 * w, 0.05 * h);
+    ctx.fill();
+  });
+
+  if (!REDUCED) {
+    /* sensor noise */
+    ctx.fillStyle = 'rgba(255,255,255,.05)';
+    for (let i = 0; i < 50; i++) ctx.fillRect(Math.random() * w, Math.random() * h, 1.6, 1.6);
+
+    /* scan line */
+    const y = ((now % 4200) / 4200) * h;
+    const sg = ctx.createLinearGradient(0, y - 26, 0, y + 26);
+    sg.addColorStop(0, 'rgba(124,196,255,0)');
+    sg.addColorStop(0.5, 'rgba(124,196,255,.14)');
+    sg.addColorStop(1, 'rgba(124,196,255,0)');
+    ctx.fillStyle = sg;
+    ctx.fillRect(0, y - 26, w, 52);
+  }
+
+  /* detection box while motion is fresh */
+  if (state.detBox && now - state.lastMotion < 3000) {
+    const b = state.detBox;
+    ctx.strokeStyle = 'rgba(232,161,60,.95)';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([10, 7]);
+    ctx.strokeRect(b.x * w, b.y * h, b.w * w, b.h * h);
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(232,161,60,.95)';
+    ctx.font = '600 17px Inter, sans-serif';
+    ctx.fillText('MOTION', b.x * w, b.y * h - 9);
+  }
+
+  /* timestamp overlay */
+  ctx.fillStyle = 'rgba(235,244,255,.85)';
+  ctx.font = '600 17px ui-monospace, monospace';
+  ctx.fillText('CAM 01 · ' + DB.settings.room + ' · ' + fmtTime(now), 18, h - 18);
+}
+
+function camLoop() {
+  const now = Date.now();
+  if (state.view === 'camera' && state.cameraActive && now - lastFrame > (REDUCED ? 1000 : 40)) {
+    drawFrame(now);
+    lastFrame = now;
+  }
+  requestAnimationFrame(camLoop);
+}
+
+/* Capture Image → Send Notification → Create Log → Save to DB */
+function captureImage() {
+  state.lastCapture = Date.now();
+  drawFrame(state.lastCapture);
+  const img = cam.toDataURL('image/jpeg', 0.55);
+  DB.captures.unshift({ t: state.lastCapture, img });
+  if (DB.captures.length > 12) DB.captures.pop();
+  renderCaptures();
+  log('Camera', 'Motion detected — image captured', DB.settings.room + ' · snapshot saved to database');
+  if (DB.settings.alerts) toast('Motion detected in ' + DB.settings.room + ' — snapshot saved.', 'warn');
+}
+
+function camStandby() {
+  state.cameraActive = false;
+  $('camOverlay').classList.add('show');
+  $('camBadge').style.display = 'none';
+  log('Camera', 'Camera deactivated', 'No motion for ' + DB.settings.camOff + 's — standby');
+}
+
+function camWake() {
+  state.cameraActive = true;
+  $('camOverlay').classList.remove('show');
+  $('camBadge').style.display = '';
+  log('Camera', 'Camera reactivated', 'Motion detected during standby');
+}
+
+function renderCaptures() {
+  const wrap = $('capList');
+  $('capEmpty').style.display = DB.captures.length ? 'none' : '';
+  wrap.innerHTML = '';
+  DB.captures.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'cap-item';
+    const im = document.createElement('img');
+    im.src = c.img;
+    im.alt = 'Motion capture';
+    const meta = document.createElement('div');
+    const b = document.createElement('b');
+    b.textContent = 'Motion detected';
+    const s = document.createElement('span');
+    s.textContent = fmtFull(c.t);
+    meta.appendChild(b);
+    meta.appendChild(s);
+    item.appendChild(im);
+    item.appendChild(meta);
+    wrap.appendChild(item);
+  });
+}
+
+/* ============================================================
+   1.3 — History records
+   request logs from db → connection? → logs available? →
+   display all / filtered → refresh reloads from db
+   ============================================================ */
+function filteredLogs() {
+  const type = $('fType').value;
+  const q = $('fSearch').value.trim().toLowerCase();
+  return DB.logs.filter(l =>
+    (type === 'all' || l.type === type) &&
+    (!q || (l.event + ' ' + l.details).toLowerCase().includes(q))
+  );
+}
+
+function loadHistory(spinner) {
+  const body = $('histBody');
+  $('histEmpty').style.display = 'none';
+  $('histError').style.display = 'none';
+  if (spinner) {
+    body.innerHTML = '';
+    $('histCount').textContent = '';
+    $('histLoading').style.display = '';
+    /* Connection Success? — simulated round-trip to the database */
+    setTimeout(() => {
+      $('histLoading').style.display = 'none';
+      renderHistory(filteredLogs());
+    }, 550);
+  } else {
+    renderHistory(filteredLogs());
+  }
+}
+
+function renderHistory(rows) {
+  const body = $('histBody');
+  body.innerHTML = '';
+  $('histCount').textContent = rows.length + ' of ' + DB.logs.length + ' records';
+
+  /* Logs Available? — NO → "No records found" */
+  if (!rows.length) {
+    $('histEmpty').style.display = '';
+    return;
+  }
+  $('histEmpty').style.display = 'none';
+
+  rows.forEach(l => {
+    const tr = document.createElement('tr');
+
+    const tdT = document.createElement('td');
+    tdT.className = 'time';
+    tdT.textContent = fmtFull(l.t);
+
+    const tdB = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + l.type;
+    badge.textContent = l.type;
+    tdB.appendChild(badge);
+
+    const tdE = document.createElement('td');
+    tdE.textContent = l.event;
+
+    const tdD = document.createElement('td');
+    tdD.className = 'time';
+    tdD.textContent = l.details;
+
+    tr.appendChild(tdT); tr.appendChild(tdB); tr.appendChild(tdE); tr.appendChild(tdD);
+    body.appendChild(tr);
+  });
+}
+
+$('btnApply').addEventListener('click', () => loadHistory(false));        // Apply Filter → Show Filtered Data
+$('fType').addEventListener('change', () => loadHistory(false));
+$('fSearch').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadHistory(false); });
+$('btnRefresh').addEventListener('click', () => loadHistory(true));      // User Refreshes → Reload Logs from DB
+
+/* ============================================================
+   1.4 — Settings
+   show current settings from DB → modify → validate →
+   invalid: error, stay · valid: save → apply → dashboard
+   ============================================================ */
+function fillSettings() {
+  $('sRoom').value = DB.settings.room;
+  $('sAutoOff').value = DB.settings.autoOff;
+  $('sCamOff').value = DB.settings.camOff;
+  $('sTemp').value = DB.settings.tempThr;
+  $('sAlerts').checked = DB.settings.alerts;
+  $('setBanner').classList.remove('show');
+  ['sRoom', 'sAutoOff', 'sCamOff', 'sTemp'].forEach(id => $(id).classList.remove('invalid'));
+  ['eSRoom', 'eSAutoOff', 'eSCamOff', 'eSTemp'].forEach(id => $(id).classList.remove('show'));
+}
+
+$('setForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const room = $('sRoom').value.trim();
+  const autoOff = Number($('sAutoOff').value);
+  const camOff = Number($('sCamOff').value);
+  const thr = Number($('sTemp').value);
+
+  const badRoom = !room;
+  const badAuto = !Number.isFinite(autoOff) || autoOff < 5 || autoOff > 3600;
+  const badCam = !Number.isFinite(camOff) || camOff < 5 || camOff > 3600;
+  const badThr = !Number.isFinite(thr) || thr < 16 || thr > 40;
+
+  setFieldError($('sRoom'), $('eSRoom'), badRoom);
+  setFieldError($('sAutoOff'), $('eSAutoOff'), badAuto);
+  setFieldError($('sCamOff'), $('eSCamOff'), badCam);
+  setFieldError($('sTemp'), $('eSTemp'), badThr);
+
+  /* Validate Input? — NO → Error → return to settings */
+  if (badRoom || badAuto || badCam || badThr) {
+    $('setBanner').classList.add('show');
+    return;
+  }
+  $('setBanner').classList.remove('show');
+
+  /* Saving changes to DB */
+  DB.settings = { room, autoOff: Math.round(autoOff), camOff: Math.round(camOff), tempThr: thr, alerts: $('sAlerts').checked };
+
+  /* Applying changes to system */
+  $('roomTitle').textContent = room;
+  if (state.occupied && setAppliance('aircon', state.temp >= thr)) {
+    log('Appliance', 'Air conditioner turned ' + (state.ap.aircon ? 'on' : 'off'), 'New threshold applied: ' + thr + ' °C');
+  }
+
+  log('Settings', 'Settings updated', 'Auto-off ' + DB.settings.autoOff + 's · camera ' + DB.settings.camOff + 's · threshold ' + thr + ' °C · alerts ' + (DB.settings.alerts ? 'on' : 'off'));
+  toast('Settings updated.', 'ok');
+  showView('dashboard');   // Returning to dashboard
+});
+
+/* User Modify Settings? — NO → Return to dashboard */
+$('btnSetCancel').addEventListener('click', () => showView('dashboard'));
+
+/* ============================================================
+   Boot
+   ============================================================ */
+(function init() {
+  $('yr').textContent = new Date().getFullYear();
+
+  const t0 = Date.now();
+  DB.logs.push(
+    { t: t0 - 92000, type: 'System', event: 'Sensors online', details: 'PIR · DHT22 · Microwave connected' },
+    { t: t0 - 95000, type: 'System', event: 'System initialized', details: 'AutoClass controller started' }
+  );
+
+  updateAuthUI();
+  renderRecent();
+  drawFrame(Date.now());
+  requestAnimationFrame(camLoop);
+  updateLiveUI(Date.now());
+  setInterval(tick, 2000);
+})();
+
+</script>
+</body>
+</html>
